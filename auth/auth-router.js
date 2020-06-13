@@ -4,9 +4,16 @@ const jwt = require('jsonwebtoken'); // added this import for jwt token
 
 const Users = require('../users/users-model.js');
 const secrets = require('../config/secrets.js'); // imported the secrets file for the secret part of jwt
+const resToken = require('./restrictTokenMid.js');
 
-router.post('/register', (req, res) => {
-
+router.get('/users', resToken, (req, res) => {  // added the resToken Middleware to restrict access to users unless you have a token
+    Users.find()
+    .then(users => {
+        res.json(users);
+    })
+    .catch(err => {
+        res.send(err);
+    })
 });
 
 router.post('/login', (req, res) => {
@@ -34,7 +41,8 @@ router.post('/login', (req, res) => {
 function generateToken(user) {
     const payload = {
         subject: user.id, //sub
-        username: user.name,
+        username: user.username,
+        role: user.role || 'user'
         // ... other data
     };
     // const secret = 'this is my secure secret';  we imported our secret instead of writing it inline

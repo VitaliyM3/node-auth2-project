@@ -1,26 +1,13 @@
 const express = require('express');
-const session = require('express-session');
 
 const usersRouter = require('../users/users-router.js');
 const authRouter = require('../auth/auth-router.js');
+const restricted = require('../auth/restrictTokenMid.js');
 
 const server = express();
 
-const sessionConfig = {
-    name: "Apple",
-    secret: "This is my secret",
-    cookie: {
-        maxAge: 1000 * 20,
-        secure: false,
-        httpOnly: true,
-    },
-    resave: false,
-    saveUninitialized: false,
-};
-
-
 server.use(express.json());
-server.use(session(sessionConfig));
+
 
 server.use('/api', usersRouter);
 server.use('/api/auth', authRouter);
@@ -31,3 +18,16 @@ server.get("/", (req, res) => {
 });
 
 module.exports = server;
+
+function checkRole(role) {
+    return (req, res, next) => {
+        if(req.decodedToken && 
+            req.decodedToken.role && 
+            req.decodedToken.toLowerCase() === role
+            ) {
+                next();
+        } else {
+            res.status(403).json({ message: "You shall not pass!" });
+        }
+    };
+}
